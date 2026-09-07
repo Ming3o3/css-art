@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>图片转 CSS 艺术</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="control-column" aria-labelledby="controls-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">轮廓工作室</p>
+          <h1 id="controls-title">把图片转换成 CSS 图层。</h1>
+        </div>
+        <span class="version-chip">v0.2.0</span>
+      </div>
+
+      <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="选择图片">
+        <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <div class="upload-glyph" aria-hidden="true">&#8593;</div>
+        <div>
+          <strong id="upload-title">将图片拖到这里</strong>
+          <p id="upload-subtitle">或选择 PNG、JPG 或 WebP 文件</p>
+        </div>
+        <button class="text-button" id="choose-button" type="button">选择图片</button>
+      </div>
+
+      <div class="source-row is-hidden" id="source-row">
+        <img id="source-thumb" alt="已选图片预览">
+        <div class="source-copy">
+          <strong id="source-name">参考图片.png</strong>
+          <span id="source-meta">准备描摹</span>
+        </div>
+        <button class="icon-button" id="remove-source" type="button" aria-label="移除已选图片" title="移除已选图片">&times;</button>
+      </div>
+
+      <form id="convert-form">
+        <fieldset class="settings-group">
+          <legend>渲染设置</legend>
+          <label class="field full-field">
+            <span>预设</span>
+            <select id="preset" name="preset">
+              <option value="faithful" selected>高保真 · 细节最多</option>
+              <option value="balanced">均衡 · 输出更小</option>
+              <option value="preview">预览 · 速度最快</option>
+            </select>
+          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span>描摹宽度</span>
+              <input id="max-width" name="max_width" type="number" min="1" max="2400" placeholder="使用预设默认值">
+            </label>
+            <label class="field">
+              <span>颜色数量</span>
+              <input id="colors" name="colors" type="number" min="2" max="256" placeholder="使用预设默认值">
+            </label>
+            <label class="field">
+              <span>背景色</span>
+              <div class="color-input"><input id="background" name="background" type="color" value="#ffffff"><code id="background-value">#ffffff</code></div>
+            </label>
+            <label class="field">
+              <span>输出上限（MiB）</span>
+              <input id="max-output-mb" name="max_output_mb" type="number" min="0.01" step="0.5" value="64">
+            </label>
+            <label class="field">
+              <span>目标体积（MiB）</span>
+              <input id="fit" name="fit" type="number" min="0.01" step="0.5" placeholder="不自动压缩">
+            </label>
+          </div>
+          <label class="field full-field">
+            <span>无障碍标题</span>
+            <input id="title" name="title" type="text" value="CSS 轮廓插画" maxlength="240">
+          </label>
+          <div class="toggle-grid">
+            <label class="toggle"><input id="gradients" type="checkbox" checked><span>局部渐变</span></label>
+            <label class="toggle"><input id="underpainting" type="checkbox" checked><span>底稿层</span></label>
+            <label class="toggle"><input id="score" type="checkbox"><span>计算相似度</span></label>
+          </div>
+        </fieldset>
+
+        <div class="form-footer">
+          <span class="form-note" id="form-note">请选择图片开始。</span>
+          <button class="primary-button" id="convert-button" type="submit" disabled><span aria-hidden="true">&#9654;</span> 开始转换</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="preview-column" aria-labelledby="preview-title">
+      <div class="preview-toolbar">
+        <div>
+          <p class="eyebrow">输出画布</p>
+          <h2 id="preview-title">预览</h2>
+        </div>
+        <div class="output-actions is-hidden" id="output-actions">
+          <a class="secondary-button" id="download-button" download="css-art.html"><span aria-hidden="true">&#8595;</span> 下载 HTML</a>
+          <button class="icon-button" id="open-button" type="button" aria-label="在新标签页打开生成的 HTML" title="在新标签页打开生成的 HTML">&#8599;</button>
+        </div>
+      </div>
+
+      <div class="preview-frame" id="preview-frame">
+        <div class="empty-preview" id="empty-preview">
+          <div class="empty-grid" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <strong>CSS 插画会显示在这里</strong>
+          <span>设置参数后转换图片。</span>
+        </div>
+        <iframe id="art-preview" title="生成的 CSS 插画预览" sandbox=""></iframe>
+        <div class="loading-overlay is-hidden" id="loading-overlay" aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
+          <strong id="loading-title">正在描摹轮廓</strong>
+          <span id="loading-subtitle">正在量化颜色并拟合形状……</span>
+        </div>
+      </div>
+
+      <div class="result-strip is-hidden" id="result-strip">
+        <div><span class="result-label">形状数</span><strong id="stat-shapes">-</strong></div>
+        <div><span class="result-label">渐变数</span><strong id="stat-gradients">-</strong></div>
+        <div><span class="result-label">文件大小</span><strong id="stat-bytes">-</strong></div>
+        <div><span class="result-label">相似度</span><strong id="stat-similarity">-</strong></div>
+      </div>
+      <p class="error-message is-hidden" id="error-message" role="alert"></p>
+    </section>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
